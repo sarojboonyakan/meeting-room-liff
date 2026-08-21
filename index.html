@@ -80,7 +80,7 @@
       <div id="liffUserInfo">
         <div class="alert alert-info d-flex align-items-center mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
           <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-          <div><strong>กำลังเชื่อมต่อกับบัญชี LINE...</strong></div>
+          <div><strong>กำลังเชื่อมต่อบัญชี LINE...</strong></div>
         </div>
       </div>
     </div>
@@ -120,7 +120,7 @@
                 <div class="p-3 bg-light border rounded">
                   <label class="form-label fw-bold text-primary mb-1"><i class="bi bi-line me-1"></i> รหัสสำหรับการแจ้งเตือน (LINE User ID)</label>
                   <input type="text" id="formUserLineId" class="form-control font-monospace" placeholder="เช่น Ufc5d19be109488d7c650d724296e5058 (ระบบดึงให้อัตโนมัติ)">
-                  <small class="text-muted">* หากระบบดึงให้อัตโนมัติไม่สำเร็จ สามารถพิมพ์ 'ไอดี' ในแชทไลน์เพื่อก๊อปปี้มาวางในช่องนี้ได้ครับ</small>
+                  <small class="text-muted">* หากระบบไม่ดึงให้อัตโนมัติ สามารถก๊อปปี้ LINE User ID มาวางในช่องนี้ได้ครับ</small>
                 </div>
               </div>
 
@@ -349,7 +349,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // ⚠️ นำ URL จากการ Deploy Web App ของ Google Apps Script มาวางในช่องนี้ครับ
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz0fCNKwVxglscgBIur6ovfh6miGAWQTTeMEEOlwSknCe3GVISqj8ZeZ3bM7IJ4h00AMw/exec";
     const LIFF_ID = "2011194951-d9MUSv1d";
+    
     let rawData = [];
     let calendar;
 
@@ -391,7 +394,7 @@
             <div class="alert alert-warning d-flex align-items-center justify-content-between mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
               <div>
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>ยังไม่ได้เชื่อมต่อบัญชี LINE</strong>
+                <strong>โหมดเว็บเบราว์เซอร์:</strong> ไม่พบข้อมูลสิทธิ์ LINE
               </div>
               <button type="button" class="btn btn-sm btn-success fw-bold" onclick="liff.login()">🟢 เข้าสู่ระบบด้วย LINE</button>
             </div>`;
@@ -399,12 +402,9 @@
       } catch (err) {
         console.log("LIFF Init Error: ", err);
         userInfoEl.innerHTML = `
-          <div class="alert alert-warning d-flex align-items-center justify-content-between mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
-            <div>
-              <i class="bi bi-info-circle-fill me-2"></i>
-              <strong>โหมดปกติ:</strong> ไม่สามารถเชื่อมต่ออัตโนมัติได้
-            </div>
-            <button type="button" class="btn btn-sm btn-success fw-bold" onclick="liff.login()">🟢 กดดึงไอดี LINE</button>
+          <div class="alert alert-secondary mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
+            <i class="bi bi-globe me-2"></i>
+            <strong>โหมดเว็บทั่วไป:</strong> สามารถยื่นจองได้ปกติ
           </div>`;
       }
     }
@@ -436,10 +436,13 @@
     }
 
     function loadData() {
-      google.script.run.withSuccessHandler(data => {
-        rawData = data || [];
-        applyFilters();
-      }).getAdminBookingData();
+      fetch(GAS_WEB_APP_URL + "?action=getData")
+        .then(res => res.json())
+        .then(data => {
+          rawData = data || [];
+          applyFilters();
+        })
+        .catch(err => console.log("Load Data Error:", err));
     }
 
     function handleFormSubmit(e) {
@@ -474,7 +477,12 @@
         purpose: document.getElementById('formPurpose').value
       };
 
-      google.script.run.withSuccessHandler(res => {
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'submitBooking', data: formData })
+      })
+      .then(res => res.json())
+      .then(res => {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-send-fill"></i> ส่งคำขอจองห้อง';
         if (res && res.success) {
@@ -487,7 +495,12 @@
         } else {
           alert('⚠️ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
         }
-      }).submitBookingFromWebApp(formData);
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send-fill"></i> ส่งคำขอจองห้อง';
+        alert('⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
+      });
     }
 
     function formatDateThai(dateStr) {
