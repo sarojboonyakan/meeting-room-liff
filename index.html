@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบบริหารจัดการห้องประชุม ภัทรญาณวิทยา</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  
+  <!-- LIFF & FullCalendar JS -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+  <style>
+    body { background-color: #f1f5f9; font-family: 'Sarabun', sans-serif; color: #334155; }
+    .brand-header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 25px 20px; border-radius: 0 0 15px 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; }
+    .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; position: relative; overflow: hidden; }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-icon { font-size: 2.5rem; opacity: 0.2; position: absolute; right: 20px; bottom: 10px; }
+    
+    .card-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+    .card-success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+    .card-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .card-info { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; }
+
+    .summary-box { background-color: white; border-left: 5px solid #2563eb; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px; font-size: 1.05rem; line-height: 1.7; }
+
+    #calendar-container, .form-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .fc-event { cursor: pointer; border-radius: 6px; padding: 2px 5px; font-size: 0.85rem; }
+    .table-container { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; }
+
+    /* แท็บแบบกล่องสีพาสเทล */
+    .nav-pills .nav-link {
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-weight: 700;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .nav-pills .nav-link.tab-form { color: #0d6efd; background-color: #e7f1ff; border: 2px solid #0d6efd; }
+    .nav-pills .nav-link.tab-form.active { color: #ffffff !important; background-color: #0d6efd !important; border-color: #0d6efd !important; }
+    .nav-pills .nav-link.tab-cal { color: #198754; background-color: #e8f5e9; border: 2px solid #198754; }
+    .nav-pills .nav-link.tab-cal.active { color: #ffffff !important; background-color: #198754 !important; border-color: #198754 !important; }
+    .nav-pills .nav-link.tab-stat { color: #6f42c1; background-color: #f3e8ff; border: 2px solid #6f42c1; }
+    .nav-pills .nav-link.tab-stat.active { color: #ffffff !important; background-color: #6f42c1 !important; border-color: #6f42c1 !important; }
+
+    @media print {
+      body { background-color: #fff; margin: 0; padding: 0; font-size: 12pt; }
+      .no-print { display: none !important; }
+      .brand-header { background: none; color: black; box-shadow: none; border-bottom: 2px solid #000; border-radius: 0; padding: 10px 0; margin-bottom: 20px; }
+      .stat-card { border: 1px solid #000; color: #000 !important; background: #fff !important; box-shadow: none; margin-bottom: 15px; }
+      .summary-box { border: 1px solid #000; box-shadow: none; }
+      .table-container { box-shadow: none; border: 1px solid #000; }
+      .table th, .table td { border: 1px solid #000 !important; padding: 8px !important; }
+      .badge { border: 1px solid #000; color: #000 !important; background: none !important; }
+      .print-footer { display: block !important; margin-top: 50px; text-align: right; }
+    }
+    .print-footer { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="brand-header d-flex justify-content-between align-items-center">
+    <div>
+      <h2 class="fw-bold mb-1"><i class="bi bi-buildings"></i> ระบบบริหารจัดการห้องประชุม</h2>
+      <p class="mb-0 text-white-50">โรงเรียนภัทรญาณวิทยา | Phattarayanwittaya School</p>
+    </div>
+    <div class="no-print">
+      <button class="btn btn-outline-light me-2" onclick="window.print()"><i class="bi bi-printer"></i> พิมพ์รายงาน PDF</button>
+      <button class="btn btn-light text-primary fw-bold" onclick="loadData()"><i class="bi bi-arrow-clockwise"></i> รีเฟรช</button>
+    </div>
+  </div>
+
+  <div class="container-fluid px-4 pb-5">
+    
+    <!-- Status Box -->
+    <div class="no-print mb-3">
+      <div id="liffUserInfo">
+        <div class="alert alert-info d-flex align-items-center mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
+          <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+          <div><strong>กำลังเชื่อมต่อกับบัญชี LINE...</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills mb-4 no-print gap-2" id="dashboardTabs" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active tab-form" id="tabBtnForm" data-bs-toggle="pill" data-bs-target="#tab-form" type="button">
+          <i class="bi bi-pencil-square me-1"></i> 📝 แบบฟอร์มจองห้อง
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link tab-cal" id="tabBtnCal" data-bs-toggle="pill" data-bs-target="#tab-calendar" type="button" onclick="refreshCalendar()">
+          <i class="bi bi-calendar-month me-1"></i> 📅 ปฏิทินการใช้ห้อง
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link tab-stat" id="tabBtnTbl" data-bs-toggle="pill" data-bs-target="#tab-table" type="button">
+          <i class="bi bi-bar-chart-line me-1"></i> 📊 รายงานสถิติ & ตารางสรุป
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      
+      <!-- TAB 1: Booking Form -->
+      <div class="tab-pane fade show active no-print" id="tab-form" role="tabpanel">
+        <div class="form-container">
+          <h4 class="fw-bold text-primary mb-3"><i class="bi bi-journal-plus"></i> ยื่นคำขอจองห้องประชุม/หอประชุม</h4>
+          <hr>
+          <form id="bookingForm" onsubmit="handleFormSubmit(event)">
+
+            <div class="row g-3">
+              
+              <!-- LINE User ID Input Box -->
+              <div class="col-12">
+                <div class="p-3 bg-light border rounded">
+                  <label class="form-label fw-bold text-primary mb-1"><i class="bi bi-line me-1"></i> รหัสสำหรับการแจ้งเตือน (LINE User ID)</label>
+                  <input type="text" id="formUserLineId" class="form-control font-monospace" placeholder="เช่น Ufc5d19be109488d7c650d724296e5058 (ระบบดึงให้อัตโนมัติ)">
+                  <small class="text-muted">* หากระบบดึงให้อัตโนมัติไม่สำเร็จ สามารถพิมพ์ 'ไอดี' ในแชทไลน์เพื่อก๊อปปี้มาวางในช่องนี้ได้ครับ</small>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold">ชื่อ-นามสกุล ผู้ขอจอง <span class="text-danger">*</span></label>
+                <input type="text" id="formName" class="form-control" placeholder="เช่น นายสาโรจน์ บุญญะกรรจ์" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold">หน่วยงาน / กลุ่มสาระ / ฝ่าย <span class="text-danger">*</span></label>
+                <input type="text" id="formDept" class="form-control" placeholder="เช่น วิทยาศาสตร์และเทคโนโลยี / งานแนะแนว" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold">เบอร์โทรศัพท์ติดต่อ <span class="text-danger">*</span></label>
+                <input type="tel" id="formPhone" class="form-control" placeholder="เช่น 0812345678" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold">ห้องที่ต้องการขอใช้ <span class="text-danger">*</span></label>
+                <select id="formRoom" class="form-select" required>
+                  <option value="" disabled selected>-- เลือกห้องประชุม --</option>
+                  <option value="หอประชุมใหญ่">1. หอประชุมใหญ่</option>
+                  <option value="ห้องประชุมพุทธชาด">2. ห้องประชุมพุทธชาด</option>
+                  <option value="ห้องประชุมโพธิ์ญาณโพธิโณ">3. ห้องประชุมโพธิ์ญาณโพธิโณ</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">วันที่เริ่มต้นขอใช้ <span class="text-danger">*</span></label>
+                <input type="date" id="formStartDate" class="form-control" required>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">วันที่สิ้นสุดขอใช้ <span class="text-danger">*</span></label>
+                <input type="date" id="formEndDate" class="form-control" required>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">เวลาเริ่มต้น <span class="text-danger">*</span></label>
+                <input type="time" id="formStartTime" class="form-control" value="08:30" required>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">เวลาสิ้นสุด <span class="text-danger">*</span></label>
+                <input type="time" id="formEndTime" class="form-control" value="16:30" required>
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label fw-bold">จำนวนผู้เข้าร่วมกิจกรรม (คน) <span class="text-danger">*</span></label>
+                <input type="number" id="formParticipants" class="form-control" placeholder="เช่น 50" required>
+              </div>
+
+              <!-- Equipment Checkbox Group -->
+              <div class="col-12">
+                <label class="form-label fw-bold">รายการอุปกรณ์ที่ขอใช้งาน</label>
+                <div class="row g-2 p-3 border rounded bg-light">
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input eq-checkbox" type="checkbox" value="ไมโครโฟนไร้สาย" id="eq1">
+                      <label class="form-check-label" for="eq1">ไมโครโฟนไร้สาย</label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input eq-checkbox" type="checkbox" value="เครื่องเสียง / ลำโพง" id="eq2">
+                      <label class="form-check-label" for="eq2">เครื่องเสียง / ลำโพง</label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input eq-checkbox" type="checkbox" value="โปรเจกเตอร์ / จอภาพ" id="eq3">
+                      <label class="form-check-label" for="eq3">โปรเจกเตอร์ / จอภาพ</label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input eq-checkbox" type="checkbox" value="โพเดียม" id="eq4">
+                      <label class="form-check-label" for="eq4">โพเดียม</label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input eq-checkbox" type="checkbox" value="โต๊ะ / เก้าอี้เพิ่มเติม" id="eq5">
+                      <label class="form-check-label" for="eq5">โต๊ะ / เก้าอี้เพิ่มเติม</label>
+                    </div>
+                  </div>
+                  <div class="col-md-12 mt-2">
+                    <input type="text" id="eqOther" class="form-control form-control-sm" placeholder="อื่นๆ (ระบุอุปกรณ์เพิ่มเติม)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-bold">วัตถุประสงค์การขอใช้ห้อง <span class="text-danger">*</span></label>
+                <textarea id="formPurpose" class="form-control" rows="3" placeholder="ระบุกิจกรรมหรือรายละเอียดการใช้งาน" required></textarea>
+              </div>
+
+              <div class="col-12 text-end mt-4">
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg px-5 shadow"><i class="bi bi-send-fill"></i> ส่งคำขอจองห้อง</button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 2: Calendar -->
+      <div class="tab-pane fade no-print" id="tab-calendar" role="tabpanel">
+        <div id="calendar-container">
+          <div id="calendar"></div>
+        </div>
+      </div>
+
+      <!-- TAB 3: Reports & Statistics -->
+      <div class="tab-pane fade print-active" id="tab-table" role="tabpanel">
+        
+        <div class="row mb-4 no-print align-items-end">
+          <div class="col-md-3">
+            <label class="form-label fw-bold text-muted small">เดือนที่ต้องการดู</label>
+            <select id="monthFilter" class="form-select border-0 shadow-sm" onchange="applyFilters()">
+              <option value="ALL">สรุปภาพรวมทั้งหมด (All Time)</option>
+              <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option>
+              <option value="04">เมษายน</option><option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+              <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option><option value="09">กันยายน</option>
+              <option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-bold text-muted small">ปี (ค.ศ.)</label>
+            <select id="yearFilter" class="form-select border-0 shadow-sm" onchange="applyFilters()">
+              <option value="ALL">ทุกปี</option>
+              <option value="2026">2026</option><option value="2027">2027</option>
+            </select>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label fw-bold text-muted small">ค้นหาข้อมูล</label>
+            <input type="text" id="searchInput" class="form-control border-0 shadow-sm" placeholder="ค้นหาชื่อผู้จอง, หน่วยงาน, ห้อง..." onkeyup="applyFilters()">
+          </div>
+        </div>
+
+        <div class="summary-box">
+          <h5 class="fw-bold text-primary mb-2"><i class="bi bi-graph-up-arrow"></i> สรุปข้อความสำหรับผู้บริหาร (Executive Summary)</h5>
+          <div id="executiveSummaryText" class="text-secondary">กำลังประมวลผลข้อมูล...</div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card stat-card card-primary p-3">
+              <h6 class="mb-1 text-white-50">คำขอใช้งานทั้งหมด</h6>
+              <h2 id="totalCount" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">รายการ</small></h2>
+              <i class="bi bi-files stat-icon"></i>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card stat-card card-success p-3">
+              <h6 class="mb-1 text-white-50">อนุมัติแล้ว</h6>
+              <h2 id="approvedCount" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">รายการ</small></h2>
+              <i class="bi bi-check-circle stat-icon"></i>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card stat-card card-warning p-3">
+              <h6 class="mb-1 text-white-50">รอการพิจารณา</h6>
+              <h2 id="pendingCount" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">รายการ</small></h2>
+              <i class="bi bi-hourglass-split stat-icon"></i>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card stat-card card-info p-3">
+              <h6 class="mb-1 text-white-50">ผู้เข้าร่วมกิจกรรมรวม</h6>
+              <h2 id="totalParticipants" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">คน</small></h2>
+              <i class="bi bi-people stat-icon"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>รหัส</th>
+                <th>ผู้ขอจอง (หน่วยงาน)</th>
+                <th>ห้องประชุม</th>
+                <th>ช่วงวันที่ใช้งาน</th>
+                <th>เวลา</th>
+                <th>ผู้เข้าร่วม</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="7" class="text-center py-4 text-muted">กำลังดึงข้อมูล...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="print-footer mt-5 pt-5">
+      <p>ลงชื่อ.......................................................<br>(.......................................................)<br>ผู้รายงาน / ผู้ดูแลระบบ</p>
+    </div>
+
+  </div>
+
+  <div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalTitle"><i class="bi bi-info-circle"></i> รายละเอียดการจอง</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>👤 ผู้จอง:</strong> <span id="mName"></span></p>
+          <p><strong>🏢 หน่วยงาน:</strong> <span id="mDept"></span></p>
+          <p><strong>📞 โทร:</strong> <span id="mPhone"></span></p>
+          <p><strong>🚪 ห้อง:</strong> <span id="mRoom" class="text-primary fw-bold"></span></p>
+          <p><strong>📅 วันที่/เวลา:</strong> <span id="mTime"></span></p>
+          <p><strong>🛠️ อุปกรณ์ที่ขอ:</strong> <span id="mEquip"></span></p>
+          <p class="mb-0"><strong>🎯 วัตถุประสงค์:</strong> <span id="mPurp"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const LIFF_ID = "2011194951-d9MUSv1d";
+    let rawData = [];
+    let calendar;
+
+    window.onload = function() {
+      initLiff();
+      initCalendar();
+      loadData();
+      
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('formStartDate').value = todayStr;
+      document.getElementById('formEndDate').value = todayStr;
+    };
+
+    async function initLiff() {
+      const userInfoEl = document.getElementById('liffUserInfo');
+      const inputLineIdEl = document.getElementById('formUserLineId');
+
+      try {
+        await liff.init({ liffId: LIFF_ID });
+
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          if (inputLineIdEl) inputLineIdEl.value = profile.userId;
+
+          if (!document.getElementById('formName').value) {
+            document.getElementById('formName').value = profile.displayName;
+          }
+
+          userInfoEl.innerHTML = `
+            <div class="alert alert-success d-flex align-items-center mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
+              <i class="bi bi-check-circle-fill fs-4 me-2"></i>
+              <div>
+                <strong>เชื่อมต่อ LINE สำเร็จ:</strong> คุณ${profile.displayName} 
+                <br><small class="font-monospace text-dark">LINE ID: ${profile.userId}</small>
+              </div>
+            </div>`;
+        } else {
+          userInfoEl.innerHTML = `
+            <div class="alert alert-warning d-flex align-items-center justify-content-between mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
+              <div>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>ยังไม่ได้เชื่อมต่อบัญชี LINE</strong>
+              </div>
+              <button type="button" class="btn btn-sm btn-success fw-bold" onclick="liff.login()">🟢 เข้าสู่ระบบด้วย LINE</button>
+            </div>`;
+        }
+      } catch (err) {
+        console.log("LIFF Init Error: ", err);
+        userInfoEl.innerHTML = `
+          <div class="alert alert-warning d-flex align-items-center justify-content-between mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
+            <div>
+              <i class="bi bi-info-circle-fill me-2"></i>
+              <strong>โหมดปกติ:</strong> ไม่สามารถเชื่อมต่ออัตโนมัติได้
+            </div>
+            <button type="button" class="btn btn-sm btn-success fw-bold" onclick="liff.login()">🟢 กดดึงไอดี LINE</button>
+          </div>`;
+      }
+    }
+
+    function initCalendar() {
+      const calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'th',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
+        buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', list: 'รายการ' },
+        eventClick: function(info) {
+          const props = info.event.extendedProps;
+          document.getElementById('mName').innerText = props.name;
+          document.getElementById('mDept').innerText = props.dept;
+          document.getElementById('mPhone').innerText = props.phone;
+          document.getElementById('mRoom').innerText = props.room;
+          document.getElementById('mTime').innerText = props.timeText;
+          document.getElementById('mEquip').innerText = props.equip;
+          document.getElementById('mPurp').innerText = props.purp;
+          new bootstrap.Modal(document.getElementById('eventModal')).show();
+        }
+      });
+      calendar.render();
+    }
+
+    function refreshCalendar() {
+      setTimeout(() => { calendar.updateSize(); }, 200);
+    }
+
+    function loadData() {
+      google.script.run.withSuccessHandler(data => {
+        rawData = data || [];
+        applyFilters();
+      }).getAdminBookingData();
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      let selectedEq = [];
+      document.querySelectorAll('.eq-checkbox:checked').forEach(cb => {
+        selectedEq.push(cb.value);
+      });
+      const eqOtherVal = document.getElementById('eqOther').value.trim();
+      if (eqOtherVal) {
+        selectedEq.push(eqOtherVal);
+      }
+      const equipmentString = selectedEq.length > 0 ? selectedEq.join(', ') : '-';
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '⏳ กำลังบันทึกข้อมูล...';
+
+      const formData = {
+        userLineId: document.getElementById('formUserLineId').value.trim(),
+        name: document.getElementById('formName').value,
+        dept: document.getElementById('formDept').value,
+        phone: document.getElementById('formPhone').value,
+        room: document.getElementById('formRoom').value,
+        startDate: formatDateThai(document.getElementById('formStartDate').value),
+        endDate: formatDateThai(document.getElementById('formEndDate').value),
+        startTime: document.getElementById('formStartTime').value,
+        endTime: document.getElementById('formEndTime').value,
+        participants: parseInt(document.getElementById('formParticipants').value) || 0,
+        equipment: equipmentString,
+        purpose: document.getElementById('formPurpose').value
+      };
+
+      google.script.run.withSuccessHandler(res => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send-fill"></i> ส่งคำขอจองห้อง';
+        if (res && res.success) {
+          alert(`🎉 บันทึกการจองสำเร็จ!\nรหัสรายการ: ${res.bookingId}\n\nระบบจะส่งการแจ้งเตือนไปยัง LINE เมื่อได้รับอนุมัติครับ`);
+          document.getElementById('bookingForm').reset();
+          loadData();
+          if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
+            liff.closeWindow();
+          }
+        } else {
+          alert('⚠️ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+        }
+      }).submitBookingFromWebApp(formData);
+    }
+
+    function formatDateThai(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length < 3) return dateStr;
+      return `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
+    }
+
+    function applyFilters() {
+      const month = document.getElementById('monthFilter').value;
+      const year = document.getElementById('yearFilter').value;
+      const search = document.getElementById('searchInput').value.toLowerCase();
+
+      let filtered = rawData.filter(row => {
+        let matchMonth = true, matchYear = true, matchSearch = true;
+        if (row.rawStartDate && row.rawStartDate !== '-') {
+          const parts = row.rawStartDate.split(/[\/-]/);
+          let rM = "", rY = "";
+          if (parts[0].length === 4) { rY = parts[0]; rM = parts[1].padStart(2,'0'); } 
+          else { rM = parts[1].padStart(2,'0'); rY = parts[2]; }
+          if (month !== 'ALL') matchMonth = (rM === month);
+          if (year !== 'ALL') matchYear = (rY === year);
+        }
+        if (search) matchSearch = (row.id + row.name + row.dept + row.room + row.purpose).toLowerCase().includes(search);
+        return matchMonth && matchYear && matchSearch;
+      });
+
+      renderDashboard(filtered, month);
+    }
+
+    function formatToIsoDate(dateStr) {
+      if (!dateStr || dateStr === '-') return '';
+      const parts = dateStr.split(/[\/-]/);
+      if (parts.length < 3) return dateStr;
+      let y, m, d;
+      if (parts[0].length === 4) { y = parts[0]; m = parts[1].padStart(2, '0'); d = parts[2].padStart(2, '0'); }
+      else { d = parts[0].padStart(2, '0'); m = parts[1].padStart(2, '0'); y = parts[2]; }
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatToIsoTime(timeStr) {
+      if (!timeStr || timeStr === '-') return '00:00:00';
+      const parts = timeStr.split(':');
+      let h = parts[0].padStart(2, '0');
+      let m = (parts[1] || '00').padStart(2, '0');
+      let s = (parts[2] || '00').padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function renderDashboard(data, mFilter) {
+      const tbody = document.getElementById('tableBody');
+      calendar.removeAllEvents();
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">ไม่พบข้อมูล</td></tr>';
+        document.getElementById('totalCount').innerHTML = '0 <small class="fs-6 fw-normal">รายการ</small>';
+        document.getElementById('approvedCount').innerHTML = '0 <small class="fs-6 fw-normal">รายการ</small>';
+        document.getElementById('pendingCount').innerHTML = '0 <small class="fs-6 fw-normal">รายการ</small>';
+        document.getElementById('totalParticipants').innerHTML = '0 <small class="fs-6 fw-normal">คน</small>';
+        document.getElementById('executiveSummaryText').innerText = "ยังไม่มีข้อมูลการจองในระบบในช่วงเวลานี้";
+        return;
+      }
+
+      let total = data.length, approved = 0, pending = 0, participants = 0;
+      let roomStats = {}, deptStats = {};
+      let html = '';
+
+      data.forEach(row => {
+        if (row.status === 'อนุมัติ') {
+          approved++;
+          participants += row.participants;
+
+          if (!roomStats[row.room]) {
+            roomStats[row.room] = { count: 0, users: 0 };
+          }
+          roomStats[row.room].count += 1;
+          roomStats[row.room].users += row.participants;
+
+          deptStats[row.dept] = (deptStats[row.dept] || 0) + 1;
+
+          let startIsoDate = formatToIsoDate(row.rawStartDate);
+          let endIsoDate = formatToIsoDate(row.rawEndDate || row.rawStartDate);
+          let startIsoTime = formatToIsoTime(row.startTime);
+          let endIsoTime = formatToIsoTime(row.endTime);
+
+          if (startIsoDate) {
+            let roomColor = '#2563eb';
+            if (row.room.includes('พุทธชาด')) roomColor = '#10b981';
+            else if (row.room.includes('โพธิ์ญาณ')) roomColor = '#8b5cf6';
+
+            calendar.addEvent({
+              title: `${row.room} - ${row.name}`,
+              start: `${startIsoDate}T${startIsoTime}`,
+              end: `${endIsoDate}T${endIsoTime}`,
+              backgroundColor: roomColor,
+              borderColor: roomColor,
+              extendedProps: { 
+                name: row.name, 
+                dept: row.dept, 
+                phone: row.phone, 
+                room: row.room, 
+                timeText: `${row.rawStartDate} ถึง ${row.rawEndDate} (${row.time})`, 
+                equip: row.equipment, 
+                purp: row.purpose 
+              }
+            });
+          }
+        }
+        else if (row.status === 'รออนุมัติ') pending++;
+
+        let badge = row.status === 'อนุมัติ' ? 'bg-success' : (row.status === 'รออนุมัติ' ? 'bg-warning text-dark' : 'bg-danger');
+        const dateDisplay = (row.rawStartDate === row.rawEndDate || !row.rawEndDate) ? row.rawStartDate : `${row.rawStartDate} <br><small class="text-muted">ถึง ${row.rawEndDate}</small>`;
+
+        html += `
+          <tr>
+            <td><strong>${row.id}</strong></td>
+            <td>${row.name}<br><small class="text-muted">${row.dept}</small></td>
+            <td><span class="text-primary fw-bold">${row.room}</span></td>
+            <td>${dateDisplay}</td>
+            <td>${row.time}</td>
+            <td class="text-center">${row.participants}</td>
+            <td><span class="badge ${badge}">${row.status}</span></td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('totalCount').innerHTML = `${total} <small class="fs-6 fw-normal">รายการ</small>`;
+      document.getElementById('approvedCount').innerHTML = `${approved} <small class="fs-6 fw-normal">รายการ</small>`;
+      document.getElementById('pendingCount').innerHTML = `${pending} <small class="fs-6 fw-normal">รายการ</small>`;
+      document.getElementById('totalParticipants').innerHTML = `${participants} <small class="fs-6 fw-normal">คน</small>`;
+      tbody.innerHTML = html;
+
+      let mText = mFilter === 'ALL' ? 'ทั้งหมดตั้งแต่เริ่มใช้งาน' : `ประจำเดือน ${document.getElementById('monthFilter').options[document.getElementById('monthFilter').selectedIndex].text}`;
+      
+      let roomListHtml = '<ul class="mb-2">';
+      let topRoom = '-', maxRoomCount = 0;
+      
+      Object.keys(roomStats).forEach(roomName => {
+        let rData = roomStats[roomName];
+        roomListHtml += `<li><strong>${roomName}:</strong> ใช้งาน ${rData.count} ครั้ง (มีผู้เข้าใช้งานรวม ${rData.users.toLocaleString()} คน)</li>`;
+        if (rData.count > maxRoomCount) {
+          maxRoomCount = rData.count;
+          topRoom = roomName;
+        }
+      });
+      roomListHtml += '</ul>';
+
+      let topDept = Object.keys(deptStats).sort((a,b) => deptStats[b] - deptStats[a])[0] || "-";
+
+      let sumHtml = `
+        <p class="mb-2">ภาพรวมการขอใช้บริการ <strong>${mText}</strong> มีคำขอทั้งสิ้น <strong>${total} รายการ</strong> (อนุมัติแล้ว ${approved} รายการ) รองรับผู้เข้าร่วมกิจกรรมรวม <strong>${participants.toLocaleString()} คน</strong> โดยมีสถิติการใช้แต่ละห้อง ดังนี้:</p>
+        ${roomListHtml}
+        <p class="mb-0">🏆 <strong>ห้องที่มีการใช้งานมากที่สุดคือ:</strong> '${topRoom}' และ <strong>หน่วยงานที่เข้าใช้งานมากที่สุดคือ:</strong> '${topDept}'</p>
+      `;
+      
+      document.getElementById('executiveSummaryText').innerHTML = sumHtml;
+      
+      setTimeout(() => { calendar.updateSize(); }, 300);
+    }
+  </script>
+</body>
+</html>
