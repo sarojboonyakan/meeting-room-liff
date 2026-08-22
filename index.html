@@ -9,9 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   
-  <!-- LIFF & FullCalendar JS -->
+  <!-- LIFF, FullCalendar & SignaturePad JS -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
   <style>
     body { background-color: #f1f5f9; font-family: 'Sarabun', sans-serif; color: #334155; }
@@ -219,6 +220,17 @@
                 <textarea id="formPurpose" class="form-control" rows="3" placeholder="ระบุกิจกรรมหรือรายละเอียดการใช้งาน" required></textarea>
               </div>
 
+              <!-- ✍️ กล่องวาดลายเซ็นดิจิทัล -->
+              <div class="col-12">
+                <label class="form-label fw-bold">ลงลายมือชื่อผู้ขออนุญาต <span class="text-danger">*</span></label>
+                <div class="p-3 border rounded bg-light text-center">
+                  <canvas id="sigCanvas" width="400" height="150" style="border: 1px dashed #0d6efd; background: #ffffff; cursor: crosshair; touch-action: none; max-width: 100%; height: auto; border-radius: 8px;"></canvas>
+                  <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearSignature()"><i class="bi bi-eraser"></i> ล้างลายเซ็น</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="col-12 text-end mt-4">
                 <button type="submit" id="submitBtn" class="btn btn-primary btn-lg px-5 shadow"><i class="bi bi-send-fill"></i> ส่งคำขอจองห้อง</button>
               </div>
@@ -350,22 +362,34 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // ⚠️ นำ URL จากการ Deploy Web App ของ Google Apps Script มาวางในช่องนี้ครับ
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz0fCNKwVxglscgBIur6ovfh6miGAWQTTeMEEOlwSknCe3GVISqj8ZeZ3bM7IJ4h00AMw/exec";
     const LIFF_ID = "2011194951-d9MUSv1d";
     
     let rawData = [];
     let calendar;
+    let signaturePad;
 
     window.onload = function() {
       initLiff();
       initCalendar();
+      initSignaturePad();
       loadData();
       
       const todayStr = new Date().toISOString().split('T')[0];
       document.getElementById('formStartDate').value = todayStr;
       document.getElementById('formEndDate').value = todayStr;
     };
+
+    function initSignaturePad() {
+      const canvas = document.getElementById('sigCanvas');
+      if (canvas) {
+        signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' });
+      }
+    }
+
+    function clearSignature() {
+      if (signaturePad) signaturePad.clear();
+    }
 
     async function initLiff() {
       const userInfoEl = document.getElementById('liffUserInfo');
@@ -449,6 +473,13 @@
     function handleFormSubmit(e) {
       e.preventDefault();
 
+      if (!signaturePad || signaturePad.isEmpty()) {
+        alert('⚠️ กรุณาวาดลายมือชื่อผู้ขออนุญาตก่อนส่งคำขอจองครับ');
+        return;
+      }
+
+      const signatureBase64 = signaturePad.toDataURL('image/png');
+
       let selectedEq = [];
       document.querySelectorAll('.eq-checkbox:checked').forEach(cb => {
         selectedEq.push(cb.value);
@@ -475,7 +506,8 @@
         endTime: document.getElementById('formEndTime').value,
         participants: parseInt(document.getElementById('formParticipants').value) || 0,
         equipment: equipmentString,
-        purpose: document.getElementById('formPurpose').value
+        purpose: document.getElementById('formPurpose').value,
+        signature: signatureBase64
       };
 
       fetch(GAS_WEB_APP_URL, {
@@ -489,6 +521,7 @@
         if (res && res.success) {
           alert(`🎉 บันทึกการจองสำเร็จ!\nรหัสรายการ: ${res.bookingId}\n\nระบบจะส่งการแจ้งเตือนไปยัง LINE เมื่อได้รับอนุมัติครับ`);
           document.getElementById('bookingForm').reset();
+          clearSignature();
           loadData();
           if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
             liff.closeWindow();
@@ -667,7 +700,6 @@
       setTimeout(() => { calendar.updateSize(); }, 300);
     }
 
-    // 📌 ฟังก์ชันลบรายการจอง
     function deleteBooking(bookingId) {
       if (confirm(`คุณต้องการลบรายการจองรหัส ${bookingId} ออกจากระบบใช่หรือไม่?`)) {
         fetch(GAS_WEB_APP_URL, {
@@ -687,7 +719,6 @@
       }
     }
 
-    // 📌 ฟังก์ชันค้นหาใบจอง PDF ใน Google Drive
     function printPDF(bookingId) {
       window.open(`https://drive.google.com/drive/search?q=${bookingId}`, '_blank');
     }
