@@ -13,35 +13,150 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
   <style>
-    body { background-color: #f1f5f9; font-family: 'Sarabun', sans-serif; color: #334155; }
-    .brand-header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 25px 20px; border-radius: 0 0 15px 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; }
-    .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; position: relative; overflow: hidden; }
+    html, body {
+      overflow-x: hidden;
+      width: 100%;
+      background-color: #f1f5f9;
+      font-family: 'Sarabun', sans-serif;
+      color: #334155;
+    }
+    .brand-header {
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      color: white;
+      padding: 25px 20px;
+      border-radius: 0 0 15px 15px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+    }
     .stat-card:hover { transform: translateY(-3px); }
-    .stat-icon { font-size: 2.5rem; opacity: 0.2; position: absolute; right: 20px; bottom: 10px; }
+    .stat-icon { font-size: 2.3rem; opacity: 0.2; position: absolute; right: 15px; bottom: 8px; }
     
     .card-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
     .card-success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
     .card-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
     .card-info { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; }
 
-    .summary-box { background-color: white; border-left: 5px solid #2563eb; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px; font-size: 1.05rem; line-height: 1.7; }
+    .summary-box {
+      background-color: white;
+      border-left: 5px solid #2563eb;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+      margin-bottom: 20px;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
 
-    #calendar-container, .form-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    #calendar-container, .form-container, .settings-container {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
     .fc-event { cursor: pointer; border-radius: 6px; padding: 2px 5px; font-size: 0.85rem; }
-    .table-container { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; }
+    .table-container { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 
     .nav-pills .nav-link {
-      border-radius: 12px; padding: 10px 20px; font-weight: 700; transition: all 0.2s ease-in-out; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-weight: 700;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     .nav-pills .nav-link.tab-form { color: #0d6efd; background-color: #e7f1ff; border: 2px solid #0d6efd; }
     .nav-pills .nav-link.tab-form.active { color: #ffffff !important; background-color: #0d6efd !important; border-color: #0d6efd !important; }
+    
     .nav-pills .nav-link.tab-cal { color: #198754; background-color: #e8f5e9; border: 2px solid #198754; }
     .nav-pills .nav-link.tab-cal.active { color: #ffffff !important; background-color: #198754 !important; border-color: #198754 !important; }
+    
     .nav-pills .nav-link.tab-stat { color: #6f42c1; background-color: #f3e8ff; border: 2px solid #6f42c1; }
     .nav-pills .nav-link.tab-stat.active { color: #ffffff !important; background-color: #6f42c1 !important; border-color: #6f42c1 !important; }
 
-    .sig-container { border: 2px dashed #3b82f6; border-radius: 10px; background-color: #f8fafc; touch-action: none; position: relative; width: 100%; height: 160px; }
+    .nav-pills .nav-link.tab-admin { color: #b45309; background-color: #fef3c7; border: 2px solid #d97706; }
+    .nav-pills .nav-link.tab-admin.active { color: #ffffff !important; background-color: #d97706 !important; border-color: #d97706 !important; }
+
+    .sig-container {
+      border: 2px dashed #3b82f6;
+      border-radius: 10px;
+      background-color: #f8fafc;
+      touch-action: none;
+      position: relative;
+      width: 100%;
+      height: 160px;
+    }
     #signatureCanvas { width: 100%; height: 100%; border-radius: 8px; cursor: crosshair; display: block; }
+
+    .color-swatch {
+      width: 42px;
+      height: 38px;
+      padding: 2px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* 📱 ปรับการแสดงผลบนหน้าจอมือถือให้พอดีทุกส่วน */
+    @media (max-width: 768px) {
+      .brand-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+        padding: 16px 15px;
+        border-radius: 0 0 12px 12px;
+      }
+      .brand-header h2 { font-size: 1.25rem; }
+      .brand-header p { font-size: 0.85rem; }
+      .header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        width: 100%;
+      }
+      .header-actions .btn {
+        font-size: 0.82rem;
+        padding: 6px 10px;
+      }
+      .container-fluid {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+      }
+      #calendar-container, .form-container, .settings-container {
+        padding: 15px !important;
+      }
+      .summary-box {
+        padding: 15px;
+        font-size: 0.95rem;
+      }
+      .nav-pills {
+        flex-direction: column;
+        width: 100%;
+      }
+      .nav-pills .nav-item, .nav-pills .nav-link {
+        width: 100%;
+        text-align: center;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+      }
+      .fc .fc-toolbar {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .fc .fc-toolbar-title {
+        font-size: 1.15rem !important;
+      }
+      .fc .fc-button {
+        padding: 4px 8px !important;
+        font-size: 0.82rem !important;
+      }
+    }
 
     @media print {
       body { background-color: #fff; margin: 0; padding: 0; font-size: 12pt; }
@@ -64,8 +179,11 @@
       <h2 class="fw-bold mb-1"><i class="bi bi-buildings"></i> ระบบบริหารจัดการห้องประชุม</h2>
       <p class="mb-0 text-white-50">โรงเรียนภัทรญาณวิทยา | Phattarayanwittaya School</p>
     </div>
-    <div class="no-print">
-      <button class="btn btn-outline-light me-2" onclick="window.print()"><i class="bi bi-printer"></i> พิมพ์รายงาน PDF</button>
+    <div class="no-print header-actions">
+      <button id="btnUnlockAdmin" class="btn btn-warning text-dark fw-bold" onclick="openPinModal()" title="เข้าสู่โหมดตั้งค่าสำหรับผู้ดูแลระบบ">
+        <i class="bi bi-shield-lock-fill"></i> ผู้ดูแลระบบ
+      </button>
+      <button class="btn btn-outline-light" onclick="window.print()"><i class="bi bi-printer"></i> พิมพ์รายงาน</button>
       <button class="btn btn-light text-primary fw-bold" onclick="loadData()"><i class="bi bi-arrow-clockwise"></i> รีเฟรช</button>
     </div>
   </div>
@@ -95,6 +213,11 @@
       <li class="nav-item">
         <button class="nav-link tab-stat" id="tabBtnTbl" data-bs-toggle="pill" data-bs-target="#tab-table" type="button">
           <i class="bi bi-bar-chart-line me-1"></i> 📊 รายงานสถิติ & ตารางสรุป
+        </button>
+      </li>
+      <li class="nav-item d-none" id="navItemSettings">
+        <button class="nav-link tab-admin" id="tabBtnSettings" data-bs-toggle="pill" data-bs-target="#tab-settings" type="button">
+          <i class="bi bi-gear-fill me-1"></i> ⚙️ ตั้งค่าระบบ (Admin)
         </button>
       </li>
     </ul>
@@ -140,22 +263,22 @@
                 </select>
               </div>
 
-              <div class="col-md-3">
+              <div class="col-md-3 col-6">
                 <label class="form-label fw-bold">วันที่เริ่มต้นขอใช้ <span class="text-danger">*</span></label>
                 <input type="date" id="formStartDate" class="form-control" required>
               </div>
 
-              <div class="col-md-3">
+              <div class="col-md-3 col-6">
                 <label class="form-label fw-bold">วันที่สิ้นสุดขอใช้ <span class="text-danger">*</span></label>
                 <input type="date" id="formEndDate" class="form-control" required>
               </div>
 
-              <div class="col-md-3">
+              <div class="col-md-3 col-6">
                 <label class="form-label fw-bold">เวลาเริ่มต้น <span class="text-danger">*</span></label>
                 <input type="time" id="formStartTime" class="form-control" value="08:30" required>
               </div>
 
-              <div class="col-md-3">
+              <div class="col-md-3 col-6">
                 <label class="form-label fw-bold">เวลาสิ้นสุด <span class="text-danger">*</span></label>
                 <input type="time" id="formEndTime" class="form-control" value="16:30" required>
               </div>
@@ -188,7 +311,7 @@
               </div>
 
               <div class="col-12 text-end mt-4">
-                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg px-5 shadow"><i class="bi bi-send-fill"></i> ส่งคำขอจองห้อง</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg px-5 shadow w-100 w-md-auto"><i class="bi bi-send-fill"></i> ส่งคำขอจองห้อง</button>
               </div>
             </div>
 
@@ -203,25 +326,25 @@
 
       <!-- TAB 3: Reports & Statistics -->
       <div class="tab-pane fade print-active" id="tab-table" role="tabpanel">
-        <div class="row mb-4 no-print align-items-end">
-          <div class="col-md-3">
+        <div class="row g-2 mb-4 no-print align-items-end">
+          <div class="col-md-3 col-6">
             <label class="form-label fw-bold text-muted small">เดือนที่ต้องการดู</label>
             <select id="monthFilter" class="form-select border-0 shadow-sm" onchange="applyFilters()">
-              <option value="ALL">สรุปภาพรวมทั้งหมด (All Time)</option>
+              <option value="ALL">ทุกเดือน (All Time)</option>
               <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option>
               <option value="04">เมษายน</option><option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
               <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option><option value="09">กันยายน</option>
               <option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
             </select>
           </div>
-          <div class="col-md-2">
+          <div class="col-md-2 col-6">
             <label class="form-label fw-bold text-muted small">ปี (ค.ศ.)</label>
             <select id="yearFilter" class="form-select border-0 shadow-sm" onchange="applyFilters()">
               <option value="ALL">ทุกปี</option>
               <option value="2026">2026</option><option value="2027">2027</option>
             </select>
           </div>
-          <div class="col-md-5">
+          <div class="col-md-5 col-12">
             <label class="form-label fw-bold text-muted small">ค้นหาข้อมูล</label>
             <input type="text" id="searchInput" class="form-control border-0 shadow-sm" placeholder="ค้นหาชื่อผู้จอง, หน่วยงาน, ห้อง..." onkeyup="applyFilters()">
           </div>
@@ -232,15 +355,15 @@
           <div id="executiveSummaryText" class="text-secondary">กำลังประมวลผลข้อมูล...</div>
         </div>
 
-        <div class="row mb-4">
-          <div class="col-md-3"><div class="card stat-card card-primary p-3"><h6 class="mb-1 text-white-50">คำขอใช้งานทั้งหมด</h6><h2 id="totalCount" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">รายการ</small></h2><i class="bi bi-files stat-icon"></i></div></div>
-          <div class="col-md-3"><div class="card stat-card card-success p-3"><h6 class="mb-1 text-white-50">อนุมัติแล้ว</h6><h2 id="approvedCount" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">รายการ</small></h2><i class="bi bi-check-circle stat-icon"></i></div></div>
-          <div class="col-md-3"><div class="card stat-card card-warning p-3"><h6 class="mb-1 text-white-50">รอการพิจารณา</h6><h2 id="pendingCount" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">รายการ</small></h2><i class="bi bi-hourglass-split stat-icon"></i></div></div>
-          <div class="col-md-3"><div class="card stat-card card-info p-3"><h6 class="mb-1 text-white-50">ผู้เข้าร่วมกิจกรรมรวม</h6><h2 id="totalParticipants" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">คน</small></h2><i class="bi bi-people stat-icon"></i></div></div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3 col-6"><div class="card stat-card card-primary p-3"><h6 class="mb-1 text-white-50">คำขอทั้งหมด</h6><h2 id="totalCount" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">รายการ</small></h2><i class="bi bi-files stat-icon"></i></div></div>
+          <div class="col-md-3 col-6"><div class="card stat-card card-success p-3"><h6 class="mb-1 text-white-50">อนุมัติแล้ว</h6><h2 id="approvedCount" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">รายการ</small></h2><i class="bi bi-check-circle stat-icon"></i></div></div>
+          <div class="col-md-3 col-6"><div class="card stat-card card-warning p-3"><h6 class="mb-1 text-white-50">รอพิจารณา</h6><h2 id="pendingCount" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">รายการ</small></h2><i class="bi bi-hourglass-split stat-icon"></i></div></div>
+          <div class="col-md-3 col-6"><div class="card stat-card card-info p-3"><h6 class="mb-1 text-white-50">ผู้เข้าร่วมรวม</h6><h2 id="totalParticipants" class="fw-bold mb-0">0 <small class="fs-6 fw-normal">คน</small></h2><i class="bi bi-people stat-icon"></i></div></div>
         </div>
 
-        <div class="table-container">
-          <table class="table table-hover align-middle mb-0">
+        <div class="table-container table-responsive">
+          <table class="table table-hover align-middle mb-0 text-nowrap">
             <thead class="table-light">
               <tr>
                 <th>รหัส</th>
@@ -258,6 +381,88 @@
         </div>
       </div>
 
+      <!-- TAB 4: Admin Settings (แก้ไขข้อมูลผ่านหน้าเว็บ) -->
+      <div class="tab-pane fade no-print" id="tab-settings" role="tabpanel">
+        <div class="settings-container">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+              <h4 class="fw-bold text-warning-emphasis mb-1"><i class="bi bi-gear-wide-connected"></i> ตั้งค่าข้อมูลพื้นฐานของระบบ</h4>
+              <p class="text-muted small mb-0">แก้ไขรายชื่อห้อง สีปฏิทิน อุปกรณ์ และผู้อนุมัติ ระบบจะบันทึกลง Google Sheets อัตโนมัติ</p>
+            </div>
+            <button type="button" id="btnSaveSettingsTop" class="btn btn-success fw-bold px-4 shadow-sm" onclick="saveAllSettings()">
+              <i class="bi bi-cloud-arrow-up-fill me-1"></i> บันทึกการตั้งค่าทั้งหมด
+            </button>
+          </div>
+          <hr>
+
+          <!-- ส่วนที่ 1: จัดการห้องประชุม -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-bold text-primary mb-0"><i class="bi bi-door-open-fill me-1"></i> 1. รายชื่อห้องประชุม & สีบนปฏิทิน</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary fw-bold" onclick="addRoomRow()">
+                <i class="bi bi-plus-circle-fill"></i> เพิ่มห้องประชุม
+              </button>
+            </div>
+            <div id="settingsRoomsList" class="d-flex flex-column gap-2"></div>
+          </div>
+
+          <hr>
+
+          <!-- ส่วนที่ 2: จัดการรายการอุปกรณ์ -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-bold text-success mb-0"><i class="bi bi-speaker-fill me-1"></i> 2. รายการอุปกรณ์ที่ให้ยืม</h5>
+              <button type="button" class="btn btn-sm btn-outline-success fw-bold" onclick="addEquipmentRow()">
+                <i class="bi bi-plus-circle-fill"></i> เพิ่มอุปกรณ์
+              </button>
+            </div>
+            <div id="settingsEquipmentsList" class="d-flex flex-column gap-2"></div>
+          </div>
+
+          <hr>
+
+          <!-- ส่วนที่ 3: จัดการแอดมิน & รอง ผอ. -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-bold text-dark mb-0"><i class="bi bi-person-badge-fill me-1"></i> 3. ผู้ดูแลสถานที่ (Admin) & ผู้บริหาร (Deputy)</h5>
+              <button type="button" class="btn btn-sm btn-outline-dark fw-bold" onclick="addAdminRow()">
+                <i class="bi bi-plus-circle-fill"></i> เพิ่มแอดมิน
+              </button>
+            </div>
+            
+            <!-- กล่องข้อมูลรองผู้อำนวยการ -->
+            <div class="card border-primary mb-3 bg-primary-subtle bg-opacity-10">
+              <div class="card-body p-3">
+                <div class="fw-bold text-primary mb-2"><i class="bi bi-award-fill"></i> ผู้อนุมัติขั้นสุดท้าย (รองผู้อำนวยการ)</div>
+                <div class="row g-2">
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold mb-1">ชื่อ-นามสกุล</label>
+                    <input type="text" id="setDeputyName" class="form-control form-control-sm" placeholder="ชื่อ-นามสกุล รอง ผอ.">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold mb-1">LINE User ID</label>
+                    <input type="text" id="setDeputyLineId" class="form-control form-control-sm font-monospace" placeholder="U...">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold mb-1">File ID ลายเซ็น (Google Drive)</label>
+                    <input type="text" id="setDeputySigId" class="form-control form-control-sm font-monospace" placeholder="รหัส File ID รูปภาพ">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- รายการแอดมินผู้ดูแลสถานที่ -->
+            <div id="settingsAdminsList" class="d-flex flex-column gap-2"></div>
+          </div>
+
+          <div class="text-end mt-4">
+            <button type="button" id="btnSaveSettingsBottom" class="btn btn-success btn-lg fw-bold px-5 shadow w-100 w-md-auto" onclick="saveAllSettings()">
+              <i class="bi bi-cloud-arrow-up-fill me-1"></i> บันทึกการตั้งค่าทั้งหมด
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div class="print-footer mt-5 pt-5">
@@ -266,6 +471,7 @@
 
   </div>
 
+  <!-- Modal รายละเอียดการจองบนปฏิทิน -->
   <div class="modal fade" id="eventModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow">
@@ -286,13 +492,35 @@
     </div>
   </div>
 
+  <!-- Modal ใส่รหัส PIN สำหรับแอดมินบนคอมพิวเตอร์ -->
+  <div class="modal fade" id="pinModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title fw-bold"><i class="bi bi-shield-lock-fill"></i> ยืนยันสิทธิ์ผู้ดูแลระบบ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label small fw-bold">กรอกรหัส PIN ผู้ดูแลระบบ</label>
+          <input type="password" id="adminPinInput" class="form-control text-center fs-5 font-monospace" placeholder="••••" inputmode="numeric" onkeyup="if(event.key==='Enter') verifyAdminPin()">
+          <small class="text-muted d-block mt-2">* หากเปิดผ่าน LINE ด้วยบัญชีแอดมิน ระบบจะปลดล็อกให้อัตโนมัติ</small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btnConfirmPin" class="btn btn-warning fw-bold w-100" onclick="verifyAdminPin()">ปลดล็อกเมนูตั้งค่า</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz0fCNKwVxglscgBIur6ovfh6miGAWQTTeMEEOlwSknCe3GVISqj8ZeZ3bM7IJ4h00AMw/exec";
     const LIFF_ID = "2011194951-d9MUSv1d";
     
     let rawData = [];
-    let systemSettings = { rooms: [], equipments: [] };
+    let systemSettings = { rooms: [], equipments: [], adminList: [], deputy: {} };
+    let currentLiffUserId = "";
+    let verifiedAdminPin = "";
     let calendar;
     let canvas, ctx, isDrawing = false, hasSigned = false;
 
@@ -326,8 +554,12 @@
 
     function resizeCanvas() {
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      if (rect.width === 0 || rect.height === 0) return;
+      // ป้องกันการล้างลายเซ็นเมื่อเลื่อนหน้าจอมือถือขึ้นลง
+      if (canvas.width === Math.round(rect.width) && canvas.height === Math.round(rect.height)) return;
+
+      canvas.width = Math.round(rect.width);
+      canvas.height = Math.round(rect.height);
       ctx.lineWidth = 2.5;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -377,6 +609,7 @@
 
         if (liff.isLoggedIn()) {
           const profile = await liff.getProfile();
+          currentLiffUserId = profile.userId;
           if (inputLineIdEl) inputLineIdEl.value = profile.userId;
 
           if (!document.getElementById('formName').value) {
@@ -391,9 +624,10 @@
                 <br><small class="font-monospace text-dark">LINE ID: ${profile.userId}</small>
               </div>
             </div>`;
+          checkAdminAccess();
         } else {
           userInfoEl.innerHTML = `
-            <div class="alert alert-warning d-flex align-items-center justify-content-between mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
+            <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0 py-2 px-3 shadow-sm" style="border-radius: 10px;">
               <div><i class="bi bi-exclamation-triangle-fill me-2"></i><strong>โหมดเว็บเบราว์เซอร์:</strong> ไม่พบข้อมูลสิทธิ์ LINE</div>
               <button type="button" class="btn btn-sm btn-success fw-bold" onclick="liff.login()">🟢 เข้าสู่ระบบด้วย LINE</button>
             </div>`;
@@ -403,11 +637,62 @@
       }
     }
 
+    function checkAdminAccess() {
+      const isLineAdmin = (systemSettings.adminList || []).some(a => a.lineId && a.lineId === currentLiffUserId);
+      if (isLineAdmin || verifiedAdminPin) {
+        document.getElementById('navItemSettings').classList.remove('d-none');
+        document.getElementById('btnUnlockAdmin').classList.add('d-none');
+      }
+    }
+
+    function openPinModal() {
+      document.getElementById('adminPinInput').value = '';
+      new bootstrap.Modal(document.getElementById('pinModal')).show();
+    }
+
+    function verifyAdminPin() {
+      const pin = document.getElementById('adminPinInput').value.trim();
+      if (!pin) return;
+
+      const btn = document.getElementById('btnConfirmPin');
+      btn.disabled = true;
+      btn.innerText = '⏳ กำลังตรวจสอบ...';
+
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'verifyPin', pin: pin })
+      })
+      .then(res => res.json())
+      .then(res => {
+        btn.disabled = false;
+        btn.innerText = 'ปลดล็อกเมนูตั้งค่า';
+        if (res && res.success) {
+          verifiedAdminPin = pin;
+          bootstrap.Modal.getInstance(document.getElementById('pinModal')).hide();
+          checkAdminAccess();
+          new bootstrap.Tab(document.getElementById('tabBtnSettings')).show();
+        } else {
+          alert('❌ รหัส PIN ไม่ถูกต้องครับ');
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.innerText = 'ปลดล็อกเมนูตั้งค่า';
+        alert('⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      });
+    }
+
     function initCalendar() {
       const calendarEl = document.getElementById('calendar');
+      const isMobile = window.innerWidth < 768;
+
       calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth', locale: 'th',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
+        initialView: isMobile ? 'listMonth' : 'dayGridMonth',
+        locale: 'th',
+        height: 'auto',
+        headerToolbar: isMobile 
+          ? { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' }
+          : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
         buttonText: { today: 'วันนี้', month: 'เดือน', week: 'สัปดาห์', list: 'รายการ' },
         eventClick: function(info) {
           const props = info.event.extendedProps;
@@ -431,8 +716,10 @@
         .then(res => res.json())
         .then(res => {
           rawData = res.bookings || [];
-          systemSettings = res.settings || { rooms: [], equipments: [] };
+          systemSettings = res.settings || { rooms: [], equipments: [], adminList: [], deputy: {} };
+          checkAdminAccess();
           renderFormOptions();
+          renderSettingsUI();
           applyFilters();
         })
         .catch(err => {
@@ -440,7 +727,6 @@
         });
     }
 
-    // สร้างตัวเลือกห้องประชุม และ อุปกรณ์ อัตโนมัติจากแท็บ "ตั้งค่าระบบ"
     function renderFormOptions() {
       const roomSelect = document.getElementById('formRoom');
       const currentSelectedRoom = roomSelect.value;
@@ -458,7 +744,7 @@
       let eqHtml = '';
       activeEq.forEach((eq, idx) => {
         eqHtml += `
-          <div class="col-md-4">
+          <div class="col-md-4 col-6">
             <div class="form-check">
               <input class="form-check-input eq-checkbox" type="checkbox" value="${eq.name}" id="eq_${idx}">
               <label class="form-check-label" for="eq_${idx}">${eq.name}</label>
@@ -469,6 +755,175 @@
       eqContainer.innerHTML = eqHtml;
     }
 
+    // -----------------------------------------------------------------
+    // ADMIN SETTINGS UI BUILDERS
+    // -----------------------------------------------------------------
+    function renderSettingsUI() {
+      // 1. ห้องประชุม
+      const roomsDiv = document.getElementById('settingsRoomsList');
+      roomsDiv.innerHTML = '';
+      (systemSettings.rooms || []).forEach(r => addRoomRow(r));
+
+      // 2. อุปกรณ์
+      const eqDiv = document.getElementById('settingsEquipmentsList');
+      eqDiv.innerHTML = '';
+      (systemSettings.equipments || []).forEach(eq => addEquipmentRow(eq));
+
+      // 3. รอง ผอ. และ แอดมิน
+      const dep = systemSettings.deputy || {};
+      document.getElementById('setDeputyName').value = dep.name || '';
+      document.getElementById('setDeputyLineId').value = dep.lineId || '';
+      document.getElementById('setDeputySigId').value = dep.sigFileId || '';
+
+      const adminsDiv = document.getElementById('settingsAdminsList');
+      adminsDiv.innerHTML = '';
+      (systemSettings.adminList || []).forEach(a => addAdminRow(a));
+    }
+
+    function addRoomRow(room = { name: '', color: '#f59e0b', status: 'เปิดใช้งาน' }) {
+      const container = document.getElementById('settingsRoomsList');
+      const row = document.createElement('div');
+      row.className = 'card p-2 border bg-light room-setting-item';
+      row.innerHTML = `
+        <div class="row g-2 align-items-center">
+          <div class="col-md-6 col-12">
+            <input type="text" class="form-control form-control-sm room-name" placeholder="ชื่อห้องประชุม เช่น ห้องโสตทัศนศึกษา" value="${escapeHtml(room.name)}">
+          </div>
+          <div class="col-md-2 col-4 d-flex align-items-center gap-2">
+            <input type="color" class="form-control form-control-color color-swatch room-color" value="${room.color || '#2563eb'}" title="เลือกสีปฏิทิน">
+            <small class="text-muted">สีปฏิทิน</small>
+          </div>
+          <div class="col-md-3 col-6">
+            <select class="form-select form-select-sm room-status">
+              <option value="เปิดใช้งาน" ${room.status === 'เปิดใช้งาน' ? 'selected' : ''}>🟢 เปิดใช้งาน</option>
+              <option value="ปิดปรับปรุง" ${room.status === 'ปิดปรับปรุง' ? 'selected' : ''}>🔴 ปิดปรับปรุง</option>
+            </select>
+          </div>
+          <div class="col-md-1 col-2 text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.room-setting-item').remove()" title="ลบห้องนี้">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>`;
+      container.appendChild(row);
+    }
+
+    function addEquipmentRow(eq = { name: '', status: 'เปิดใช้งาน' }) {
+      const container = document.getElementById('settingsEquipmentsList');
+      const row = document.createElement('div');
+      row.className = 'card p-2 border bg-light eq-setting-item';
+      row.innerHTML = `
+        <div class="row g-2 align-items-center">
+          <div class="col-md-8 col-12">
+            <input type="text" class="form-control form-control-sm eq-name" placeholder="ชื่ออุปกรณ์ เช่น จอ LED / กล้องถ่ายทอดสด" value="${escapeHtml(eq.name)}">
+          </div>
+          <div class="col-md-3 col-10">
+            <select class="form-select form-select-sm eq-status">
+              <option value="เปิดใช้งาน" ${eq.status === 'เปิดใช้งาน' ? 'selected' : ''}>🟢 เปิดใช้งาน</option>
+              <option value="ปิดปรับปรุง" ${eq.status === 'ปิดปรับปรุง' ? 'selected' : ''}>🔴 งดให้บริการ</option>
+            </select>
+          </div>
+          <div class="col-md-1 col-2 text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.eq-setting-item').remove()" title="ลบอุปกรณ์นี้">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>`;
+      container.appendChild(row);
+    }
+
+    function addAdminRow(admin = { name: '', lineId: '', sigFileId: '' }) {
+      const container = document.getElementById('settingsAdminsList');
+      const row = document.createElement('div');
+      row.className = 'card p-2 border bg-light admin-setting-item';
+      row.innerHTML = `
+        <div class="row g-2 align-items-center">
+          <div class="col-md-4 col-12">
+            <input type="text" class="form-control form-control-sm admin-name" placeholder="ชื่อ-นามสกุล ผู้ดูแลสถานที่" value="${escapeHtml(admin.name)}">
+          </div>
+          <div class="col-md-4 col-12">
+            <input type="text" class="form-control form-control-sm font-monospace admin-line-id" placeholder="LINE User ID (U...)" value="${escapeHtml(admin.lineId)}">
+          </div>
+          <div class="col-md-3 col-10">
+            <input type="text" class="form-control form-control-sm font-monospace admin-sig-id" placeholder="File ID ลายเซ็นใน Drive" value="${escapeHtml(admin.sigFileId)}">
+          </div>
+          <div class="col-md-1 col-2 text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.admin-setting-item').remove()" title="ลบแอดมินคนนี้">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>`;
+      container.appendChild(row);
+    }
+
+    function saveAllSettings() {
+      let rooms = [];
+      document.querySelectorAll('.room-setting-item').forEach(el => {
+        const name = el.querySelector('.room-name').value.trim();
+        const color = el.querySelector('.room-color').value;
+        const status = el.querySelector('.room-status').value;
+        if (name) rooms.push({ name, color, status });
+      });
+
+      let equipments = [];
+      document.querySelectorAll('.eq-setting-item').forEach(el => {
+        const name = el.querySelector('.eq-name').value.trim();
+        const status = el.querySelector('.eq-status').value;
+        if (name) equipments.push({ name, status });
+      });
+
+      let adminList = [];
+      document.querySelectorAll('.admin-setting-item').forEach(el => {
+        const name = el.querySelector('.admin-name').value.trim();
+        const lineId = el.querySelector('.admin-line-id').value.trim();
+        const sigFileId = el.querySelector('.admin-sig-id').value.trim();
+        if (name || lineId) adminList.push({ name, lineId, sigFileId });
+      });
+
+      const deputy = {
+        name: document.getElementById('setDeputyName').value.trim(),
+        lineId: document.getElementById('setDeputyLineId').value.trim(),
+        sigFileId: document.getElementById('setDeputySigId').value.trim()
+      };
+
+      const btnTop = document.getElementById('btnSaveSettingsTop');
+      const btnBot = document.getElementById('btnSaveSettingsBottom');
+      btnTop.disabled = btnBot.disabled = true;
+      btnTop.innerHTML = btnBot.innerHTML = '⏳ กำลังบันทึก...';
+
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'saveSettings',
+          auth: { userId: currentLiffUserId, pin: verifiedAdminPin },
+          settings: { rooms, equipments, adminList, deputy }
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        btnTop.disabled = btnBot.disabled = false;
+        btnTop.innerHTML = btnBot.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> บันทึกการตั้งค่าทั้งหมด';
+        if (res && res.success) {
+          alert('✅ บันทึกการตั้งค่าลง Google Sheets และอัปเดตหน้าเว็บเรียบร้อยแล้ว!');
+          loadData();
+        } else {
+          alert('❌ บันทึกไม่สำเร็จ: ' + (res.error || 'กรุณาตรวจสอบสิทธิ์'));
+        }
+      })
+      .catch(() => {
+        btnTop.disabled = btnBot.disabled = false;
+        btnTop.innerHTML = btnBot.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> บันทึกการตั้งค่าทั้งหมด';
+        alert('⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // -----------------------------------------------------------------
+    // BOOKING SUBMISSION & DASHBOARD
+    // -----------------------------------------------------------------
     function deleteBooking(id) {
       if (confirm(`คุณต้องการลบรายการจองรหัส ${id} ใช่หรือไม่?`)) {
         fetch(GAS_WEB_APP_URL, {
@@ -484,7 +939,7 @@
             alert('⚠️ ไม่สามารถลบรายการได้: ' + (res.error || ''));
           }
         })
-        .catch(err => alert('⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อ'));
+        .catch(() => alert('⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อ'));
       }
     }
 
@@ -542,7 +997,7 @@
           alert('⚠️ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
         }
       })
-      .catch(err => {
+      .catch(() => {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-send-fill"></i> ส่งคำขอจองห้อง';
         alert('⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
@@ -624,7 +1079,6 @@
           let endIsoDate = formatToIsoDate(row.rawEndDate || row.rawStartDate);
 
           if (startIsoDate) {
-            // ดึงรหัสสีของห้องจากแท็บ "ตั้งค่าระบบ" อัตโนมัติ
             const matchedRoom = (systemSettings.rooms || []).find(r => r.name === row.room);
             let roomColor = matchedRoom && matchedRoom.color ? matchedRoom.color : '#2563eb';
 
