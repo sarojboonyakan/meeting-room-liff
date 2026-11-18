@@ -136,10 +136,7 @@
               <div class="col-md-6">
                 <label class="form-label fw-bold">ห้องที่ต้องการขอใช้ <span class="text-danger">*</span></label>
                 <select id="formRoom" class="form-select" required>
-                  <option value="" disabled selected>-- เลือกห้องประชุม --</option>
-                  <option value="หอประชุมใหญ่">1. หอประชุมใหญ่</option>
-                  <option value="ห้องประชุมพุทธชาด">2. ห้องประชุมพุทธชาด</option>
-                  <option value="ห้องประชุมโพธิ์ญาณโพธิโณ">3. ห้องประชุมโพธิ์ญาณโพธิโณ</option>
+                  <option value="" disabled selected>⏳ กำลังโหลดรายชื่อห้องประชุม...</option>
                 </select>
               </div>
 
@@ -170,13 +167,8 @@
 
               <div class="col-12">
                 <label class="form-label fw-bold">รายการอุปกรณ์ที่ขอใช้งาน</label>
-                <div class="row g-2 p-3 border rounded bg-light">
-                  <div class="col-md-4"><div class="form-check"><input class="form-check-input eq-checkbox" type="checkbox" value="ไมโครโฟนไร้สาย" id="eq1"><label class="form-check-label" for="eq1">ไมโครโฟนไร้สาย</label></div></div>
-                  <div class="col-md-4"><div class="form-check"><input class="form-check-input eq-checkbox" type="checkbox" value="เครื่องเสียง / ลำโพง" id="eq2"><label class="form-check-label" for="eq2">เครื่องเสียง / ลำโพง</label></div></div>
-                  <div class="col-md-4"><div class="form-check"><input class="form-check-input eq-checkbox" type="checkbox" value="โปรเจกเตอร์ / จอภาพ" id="eq3"><label class="form-check-label" for="eq3">โปรเจกเตอร์ / จอภาพ</label></div></div>
-                  <div class="col-md-4"><div class="form-check"><input class="form-check-input eq-checkbox" type="checkbox" value="โพเดียม" id="eq4"><label class="form-check-label" for="eq4">โพเดียม</label></div></div>
-                  <div class="col-md-4"><div class="form-check"><input class="form-check-input eq-checkbox" type="checkbox" value="โต๊ะ / เก้าอี้เพิ่มเติม" id="eq5"><label class="form-check-label" for="eq5">โต๊ะ / เก้าอี้เพิ่มเติม</label></div></div>
-                  <div class="col-md-12 mt-2"><input type="text" id="eqOther" class="form-control form-control-sm" placeholder="อื่นๆ (ระบุอุปกรณ์เพิ่มเติม)"></div>
+                <div class="row g-2 p-3 border rounded bg-light" id="equipmentContainer">
+                  <div class="col-12 text-muted small">⏳ กำลังโหลดรายการอุปกรณ์...</div>
                 </div>
               </div>
 
@@ -300,6 +292,7 @@
     const LIFF_ID = "2011194951-d9MUSv1d";
     
     let rawData = [];
+    let systemSettings = { rooms: [], equipments: [] };
     let calendar;
     let canvas, ctx, isDrawing = false, hasSigned = false;
 
@@ -434,9 +427,46 @@
     function refreshCalendar() { setTimeout(() => { calendar.updateSize(); }, 200); }
 
     function loadData() {
-      fetch(GAS_WEB_APP_URL + "?action=getData")
+      fetch(GAS_WEB_APP_URL + "?action=getInitData")
         .then(res => res.json())
-        .then(data => { rawData = data || []; applyFilters(); });
+        .then(res => {
+          rawData = res.bookings || [];
+          systemSettings = res.settings || { rooms: [], equipments: [] };
+          renderFormOptions();
+          applyFilters();
+        })
+        .catch(err => {
+          console.error("Load error:", err);
+        });
+    }
+
+    // สร้างตัวเลือกห้องประชุม และ อุปกรณ์ อัตโนมัติจากแท็บ "ตั้งค่าระบบ"
+    function renderFormOptions() {
+      const roomSelect = document.getElementById('formRoom');
+      const currentSelectedRoom = roomSelect.value;
+      const activeRooms = (systemSettings.rooms || []).filter(r => r.status === 'เปิดใช้งาน');
+
+      let roomHtml = '<option value="" disabled selected>-- เลือกห้องประชุม --</option>';
+      activeRooms.forEach((r, idx) => {
+        const selected = (r.name === currentSelectedRoom) ? 'selected' : '';
+        roomHtml += `<option value="${r.name}" ${selected}>${idx + 1}. ${r.name}</option>`;
+      });
+      roomSelect.innerHTML = roomHtml;
+
+      const eqContainer = document.getElementById('equipmentContainer');
+      const activeEq = (systemSettings.equipments || []).filter(eq => eq.status === 'เปิดใช้งาน');
+      let eqHtml = '';
+      activeEq.forEach((eq, idx) => {
+        eqHtml += `
+          <div class="col-md-4">
+            <div class="form-check">
+              <input class="form-check-input eq-checkbox" type="checkbox" value="${eq.name}" id="eq_${idx}">
+              <label class="form-check-label" for="eq_${idx}">${eq.name}</label>
+            </div>
+          </div>`;
+      });
+      eqHtml += `<div class="col-md-12 mt-2"><input type="text" id="eqOther" class="form-control form-control-sm" placeholder="อื่นๆ (ระบุอุปกรณ์เพิ่มเติม)"></div>`;
+      eqContainer.innerHTML = eqHtml;
     }
 
     function deleteBooking(id) {
@@ -594,9 +624,9 @@
           let endIsoDate = formatToIsoDate(row.rawEndDate || row.rawStartDate);
 
           if (startIsoDate) {
-            let roomColor = '#2563eb';
-            if (row.room.includes('พุทธชาด')) roomColor = '#10b981';
-            else if (row.room.includes('โพธิ์ญาณ')) roomColor = '#8b5cf6';
+            // ดึงรหัสสีของห้องจากแท็บ "ตั้งค่าระบบ" อัตโนมัติ
+            const matchedRoom = (systemSettings.rooms || []).find(r => r.name === row.room);
+            let roomColor = matchedRoom && matchedRoom.color ? matchedRoom.color : '#2563eb';
 
             calendar.addEvent({
               title: `${row.room} - ${row.name}`,
@@ -612,7 +642,6 @@
         let badge = row.status === 'อนุมัติ' ? 'bg-success' : (row.status.includes('รอ') ? 'bg-warning text-dark' : 'bg-danger');
         const dateDisplay = (row.rawStartDate === row.rawEndDate || !row.rawEndDate) ? row.rawStartDate : `${row.rawStartDate} <br><small class="text-muted">ถึง ${row.rawEndDate}</small>`;
 
-        // สร้างปุ่ม PDF และ ปุ่มลบ
         let pdfBtn = row.pdfUrl ? `<a href="${row.pdfUrl}" target="_blank" class="btn btn-sm btn-outline-primary me-1" title="เปิด/พิมพ์ใบขออนุญาต PDF"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>` : '';
         let deleteBtn = `<button class="btn btn-sm btn-outline-danger" onclick="deleteBooking('${row.id}')" title="ลบรายการนี้"><i class="bi bi-trash-fill"></i> ลบ</button>`;
 
